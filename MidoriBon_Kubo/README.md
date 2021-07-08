@@ -11,6 +11,24 @@
 
 ## Pythonの環境など
 
+### pyenv
+
+```
+$ pyenv --version 
+pyenv 1.2.21-6-g2bf6111f
+```
+
+```
+$ pyenv versions 
+  system
+  3.8.6
+* 3.9.1 (set by PYENV_VERSION environment variable)
+```
+
+
+
+
+### Poetry
 ```
 $ poetry --version
 Poetry version 1.1.4
