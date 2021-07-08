@@ -1,2 +1,5 @@
 .DS_Store
 kubobook2012_Org/
+pyproject.toml
+.venv
+poetry.lock
