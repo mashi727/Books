@@ -25,6 +25,7 @@ Poetry (1.1.7) is installed now. Great!
 ```
 $ poetry init
 $ poetry add PyQt5
+$ poetry add numpy
 $ poetry add pyqtgraph
 $ poetry add pyreadr
 $ pip install scipy
