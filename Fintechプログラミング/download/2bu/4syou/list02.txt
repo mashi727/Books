@@ -1,9 +1,0 @@
-m = [0, 0]                             # 平均の行列
-s0 = dlnaapl.std()                     # 標準偏差
-s1 = dlnamzn.std()                     # 標準偏差
-da0 = aapl.index.date[0]               # 最初の日
-da9 = aapl.index.date[-1]              # 最後の日
-da = pd.date_range(da0, da9, freq='B') # 日付インデックスの作成
-corr = 0.4                             # 相関
-covs = [[s0**2, s0*s1*corr],           # 共分散行列の作成
-        [s0*s1*corr, s1**2]]

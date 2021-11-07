@@ -1,5 +1,0 @@
-tsd=ts['RateBid'].resample('min').ohlc()
-print(len(tsd))
-print(tsd.head(1))
-
-
