@@ -1,0 +1,88 @@
+# このプログラムは完了までかなり時間がかかります
+
+import matplotlib.pyplot as pp
+import pandas_datareader.data as web
+import pandas as pd
+import numpy as np
+from scipy.stats import norm
+
+aapl = web.DataReader("AAPL", "google", "2001/12/31", "2016/12/31")['Close']
+amzn = web.DataReader("AMZN", "google", "2001/12/31", "2016/12/31")['Close']
+
+aapl = aapl/aapl.iloc[0] # 株価の指数化
+lnaapl = np.log(aapl) # 指数の自然対数をとる
+
+amzn = amzn/amzn.iloc[0] # 株価の指数化
+lnamzn=np.log(amzn) # 指数の自然対数をとる
+
+dlnaapl = lnaapl.diff().dropna()
+dlnamzn = lnamzn.diff().dropna()
+
+da0 = aapl.index.date[0]               # 最初の日
+da9 = aapl.index.date[-1]              # 最後の日
+da = pd.date_range(da0, da9, freq='B') # 日付インデックスの作成
+
+def portfolio_rebalance(tsd1, tsd2):
+  port = pd.concat([tsd1, tsd2], axis=1).dropna()
+  port.columns=('p1', 'p2')
+  port['a1'] = 0
+  port['a2'] = 0
+  port['v'] = 1
+  n = len(port)
+  p1 = port['p1'].iloc[0] # 初期値の取得（アップル株）
+  p2 = port['p2'].iloc[0] # 初期値の取得（アマゾン株）
+  v = port['v'].iloc[0]   # 初期値の取得（ポートフォリオの価値
+  a1 = float(v/2/p1)      # 初期値の設定（アップル株の持ち高）
+  a2 = float(v/2/p2)      # 初期値の設定（アマゾン株の持ち高）
+  port.iloc[0,2] = a1     # 初期値のportへの設定（アップル株の持ち高）
+  port.iloc[0,3] = a2     # 初期値のportへの設定（アマゾン株の持ち高）
+
+  for i in range(1,len(port)):
+    p1 = port['p1'].iloc[i]      # 今日のアップルの株価
+    p2 = port['p2'].iloc[i]      # 今日のアマゾンの株価
+    p1_0 = port['p1'].iloc[i-1]  # 前日のアップルの株価
+    p2_0 = port['p2'].iloc[i-1]  # 前日のアマゾンの株価
+    a1_0 = port['a1'].iloc[i-1]  # 前日のアップルの持ち高
+    a2_0 = port['a2'].iloc[i-1]  # 前日のアマゾンの持ち高
+    v_0 = port['v'].iloc[i-1]    # 前日のリバランスポートフォリオの価値
+    v = a1_0 * p1 + a2_0 * p2    # 今日のリバランスポートフォリオの価値
+    port.iloc[i,4] = v           # リバランスポートフォリオの価値のアップデート
+    a1 = float(v/2/p1)           # 調整後のアップルの株数（持ち高）
+    a2 = float(v/2/p2)           # 調整後のアマゾンの株数（持ち高）
+    port.iloc[i,2] = a1          # アップルの株数のアップデート
+    port.iloc[i,3] = a2          # アマゾンの株数のアップデート
+  port['v2'] = 0.5 * port.p1 + 0.5 * port.p2 # リバランスのないポートフォリオの価値
+  return port
+
+def multivariate_price_generate_c_boots(sample1, sample2, da):
+  n = len(da)
+  P = [[1 for i in range(n)] for j in range(2)]
+
+  for i in range(1,n):
+    rnd = np.random.choice(len(sample1)) # 時系列データの順番数を無作為に抽出
+    dp1 = sample1.iloc[rnd]              # データを取得
+    dp2 = sample2.iloc[rnd]              # データを取得
+    P[0][i] = P[0][i-1] * np.exp(float(dp1)) # 時系列データの生成
+    P[1][i] = P[1][i-1] * np.exp(float(dp2)) # 時系列データの生成
+  P1 = pd.DataFrame(P[0], index=da, columns=['close']) # データフレーム化
+  P2 = pd.DataFrame(P[1], index=da, columns=['close']) # データフレーム化
+  return P1, P2
+
+#------------------リバランスのシミュレーション
+nn = 100 # シミュレーションの数
+PP1 = [0] * nn # データベースの初期化
+PP2 = [0] * nn # データベースの初期化
+PP3 = [0] * nn # データベースの初期化
+
+for i in range(nn):
+  P1, P2 = multivariate_price_generate_c_boots(dlnaapl, dlnamzn, da) # データ生成
+  port = portfolio_rebalance(P1, P2) # ポートフォリオのリバランス
+  PP1[i] = (float(port.v[-1:]))  # リバランス（毎日）の最終日の価値
+  PP2[i] = (float(port.v2[-1:])) # リバランスなしの最終日の価値
+  P1_A = P1.resample('A').last() # 年足への変換
+  P2_A = P2.resample('A').last() # 年足への変換
+  port = portfolio_rebalance(P1_A, P2_A) # 年1回のリバランス
+  PP3[i] = (float(port.v[-1:]))          # 年1回のリバランスの最終日の価値
+
+print('daily - no rebalance:', np.mean(np.log(PP1)) - np.mean(np.log(PP2)))
+print('annual - daily rebalance:', np.mean(np.log(PP3)) - np.mean(np.log(PP1)))

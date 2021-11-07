@@ -1,0 +1,63 @@
+import pandas_datareader.data as web
+import datetime
+tsd=web.DataReader("AAPL", "yahoo")
+print(tsd.head(1))
+print(tsd.tail(1))
+
+
+print(web.DataReader('AAPL', 'yahoo-actions','2014/6/9','2014/8/7'))
+# Yahoo Financeを使うコードを連続的に実行すると、エラーになる可能性があります。エラーになった場合は、少し時間をあけて再実行してみてください。
+
+print(web.get_quote_yahoo('AAPL'))
+
+
+tsd=web.DataReader("NIKKEI225", "fred", "1949/5/16")
+print(tsd.head(1))
+print(tsd.tail(1))
+
+
+https://fred.stlouisfed.org/tags/series?t=japan&ob=pv&od=desc
+
+
+https://fred.stlouisfed.org/tags/series
+
+
+http://www.forex.com/jp/company/gaincapital.shtml
+
+
+http://ratedata.gaincapital.com/
+
+
+tsd=web.DataReader("NIKKEI225", "fred", "1949/5/16")
+
+
+%matplotlib inline
+tsd.plot()
+
+
+tsd.diff().plot()
+
+
+import numpy as np
+np.log(tsd).plot()
+np.log(tsd).diff().plot()
+
+
+np.log(tsd).diff().dropna().hist(bins=200)
+
+
+import matplotlib.pyplot as plt
+tsd=web.DataReader("^N225", 'yahoo', '1950/1/1')
+plt.scatter(np.log(tsd.Close).diff(), np.log(tsd.Open).diff())
+# もしこのコードで「OverflowError: mktime argument out of range」のエラーが出るようでしたら、「1950/1/1」を「1970/1/2」に変更して実行してみてください。
+
+
+import seaborn as sns
+dlntsd=np.log(tsd.drop("Volume",axis=1)).diff().dropna()
+sns.pairplot(dlntsd)
+sns.plt.show()
+
+
+sns.jointplot(tsd.High, tsd.Close)
+
+
